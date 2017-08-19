@@ -1,9 +1,14 @@
-var words = [];
-var wordlist = [];
+var words, wordlist;
 var input, score, state, lives;
 var starttime, totaltime;
 const speed = 0.2;
 const ratio = 0.01;
+
+const getRandomWord = () => wordlist[Math.floor( Math.random() * wordlist.length)];
+const getGameTime = () => Math.floor((millis() - starttime) / 1000);
+
+const calculateSpeed = () => speed + (score/200);
+const calculateRatio = () => 1 - ratio - (score * 0.0001);
 
 function preload()
 {
@@ -38,7 +43,7 @@ function gameLoop()
     for(let [index, word] of words.entries())
     {
         word.show();
-        word.move(speed + (score/200));
+        word.move(calculateSpeed());
         if(word.isDead())
         {
             lives--;
@@ -47,21 +52,18 @@ function gameLoop()
     }
     if(lives < 1)
     {
-        totaltime = Math.floor((millis() - starttime) / 1000);
-        state = 2;
+        endGame();
         return;
     }
 
-    if(Math.random() > (1 - ratio - (score/500000) ))
+    if(Math.random() > calculateRatio())
     {
         words.push(new Word(getRandomWord()));
     }    
     
     fill(0, 255, 0);
     textSize(20);
-    let currentTime = Math.floor((millis() - starttime) / 1000);
-
-    text(`Score: ${score}\nLives: ${lives}/10\nTime: ${currentTime} seconds`, 0, height-55);
+    text(`Score: ${score}\nLives: ${lives}/10\nTime: ${getGameTime()} seconds`, 0, height-55);
 
     textSize(50);
     textAlign(CENTER);
@@ -72,12 +74,7 @@ function checkInput()
 {   
     if(state != 1)
     {
-        words = [];
-        score = 0;
-        lives = 10;
-        state = 1;
-        starttime = millis();
-        input = [];
+        startGame();
     }
     for(let [index, word] of words.entries())
     {
@@ -90,11 +87,6 @@ function checkInput()
     input = [];
 }
 
-function getRandomWord()
-{
-    index = Math.floor( Math.random() * wordlist.length );
-    return wordlist[index];
-}
 function showMenu()
 {
     fill(0, 255, 0)
@@ -102,6 +94,7 @@ function showMenu()
     textAlign(CENTER);
     text('PRESS ENTER TO START', width/2, height/2);
 }
+
 function showResults()
 {
     fill(0, 255, 0)
@@ -110,10 +103,27 @@ function showResults()
     text(`GAMEOVER\nSCORE: ${score}\nTIME: ${totaltime} seconds`, width/2, height/2);
 }
 
+function startGame()
+{
+    words = [];
+    score = 0;
+    lives = 10;
+    state = 1;
+    starttime = millis();
+    input = [];
+}
+
+function endGame()
+{
+    totaltime = getGameTime();
+    state = 2;
+}
+
 function keyTyped()
 {
     input += key;
 }
+
 function keyPressed()
 {
     if(keyCode === ENTER)
